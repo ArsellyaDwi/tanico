@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { loginSchema, getZodErrorMessage } from '@/utils/validators';
@@ -10,7 +9,11 @@ import { SignJWT } from 'jose';
 export const dynamic = 'force-dynamic';
 
 async function createSessionToken(payload) {
-  const secret = new TextEncoder().encode(process.env.SESSION_SECRET || process.env.SUPABASE_JWT_SECRET);
+  const secretKey = process.env.SESSION_SECRET || process.env.SUPABASE_JWT_SECRET;
+  if (!secretKey) {
+    throw new Error('SESSION_SECRET or SUPABASE_JWT_SECRET is not set');
+  }
+  const secret = new TextEncoder().encode(secretKey);
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -95,7 +98,14 @@ export async function POST(request) {
       name: user.name,
       role: roleName
     };
-    const signedToken = await createSessionToken(sessionData);
+
+    let signedToken;
+    try {
+      signedToken = await createSessionToken(sessionData);
+    } catch (tokenError) {
+      logger.error('Gagal membuat token JWT:', tokenError.message);
+      return NextResponse.json({ error: 'Kesalahan internal saat membuat sesi.' }, { status: 500 });
+    }
 
     const response = NextResponse.json({
       success: true,
