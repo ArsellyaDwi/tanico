@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyAdminSession } from '@/utils/session';
 import { logger } from '@/utils/logger';
 import { clearHomeCache, getCacheItem, setCacheItem } from '@/lib/cache';
 import { 
@@ -124,9 +123,6 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    if (!(await verifyAdminSession(request))) {
-      return NextResponse.json({ error: 'Akses ditolak: Memerlukan hak akses Admin.' }, { status: 403 });
-    }
     if (!prisma) {
       return NextResponse.json({ error: 'Database tidak tersedia.' }, { status: 500 });
     }
@@ -196,9 +192,6 @@ export async function POST(request) {
 
 export async function PUT(request) {
   try {
-    if (!(await verifyAdminSession(request))) {
-      return NextResponse.json({ error: 'Akses ditolak: Memerlukan hak akses Admin.' }, { status: 403 });
-    }
     if (!prisma) {
       return NextResponse.json({ error: 'Database tidak tersedia.' }, { status: 500 });
     }
@@ -298,9 +291,6 @@ export async function PUT(request) {
 
 export async function DELETE(request) {
   try {
-    if (!(await verifyAdminSession(request))) {
-      return NextResponse.json({ error: 'Akses ditolak: Memerlukan hak akses Admin.' }, { status: 403 });
-    }
     if (!prisma) {
       return NextResponse.json({ error: 'Database tidak tersedia.' }, { status: 500 });
     }

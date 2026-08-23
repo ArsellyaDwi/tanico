@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { verifySessionToken } from '@/utils/session';
 import { logger } from '@/utils/logger';
 
 export const dynamic = 'force-dynamic';

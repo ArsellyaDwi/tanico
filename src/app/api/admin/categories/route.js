@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
-import { verifyAdminSession } from '@/utils/session';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/utils/logger';
-import { 
-  ensureSupabaseImageUrl, 
-  cleanupOldImageIfReplaced, 
-  cleanupDeletedEntityImages 
+import {
+  ensureSupabaseImageUrl,
+  cleanupOldImageIfReplaced,
+  cleanupDeletedEntityImages
 } from '@/lib/supabaseStorage';
 import { clearHomeCache } from '@/lib/cache';
 
@@ -13,9 +12,6 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
   try {
-    if (!(await verifyAdminSession(request))) {
-      return NextResponse.json({ error: 'Akses ditolak. Memerlukan hak akses administrator.' }, { status: 403 });
-    }
     if (!prisma) return NextResponse.json({ error: 'Database tidak tersedia' }, { status: 500 });
     const categories = await prisma.category.findMany({
       orderBy: { sortOrder: 'asc' },
@@ -91,9 +87,6 @@ function sanitizeCategoryData(data) {
 
 export async function POST(request) {
   try {
-    if (!(await verifyAdminSession(request))) {
-      return NextResponse.json({ error: 'Akses ditolak. Memerlukan hak akses administrator.' }, { status: 403 });
-    }
     if (!prisma) return NextResponse.json({ error: 'Database tidak tersedia' }, { status: 500 });
     const body = await request.json();
     const { name } = body;
@@ -104,7 +97,6 @@ export async function POST(request) {
 
     const slug = body.slug || name.toLowerCase().trim().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
 
-    // Check duplicate name or slug
     const existing = await prisma.category.findFirst({
       where: {
         OR: [
@@ -149,9 +141,6 @@ export async function POST(request) {
 
 export async function PUT(request) {
   try {
-    if (!(await verifyAdminSession(request))) {
-      return NextResponse.json({ error: 'Akses ditolak. Memerlukan hak akses administrator.' }, { status: 403 });
-    }
     if (!prisma) return NextResponse.json({ error: 'Database tidak tersedia' }, { status: 500 });
     const body = await request.json();
 

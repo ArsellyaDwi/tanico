@@ -1,14 +1,10 @@
 import { NextResponse } from 'next/server';
-import { verifyAdminSession } from '@/utils/session';
 import { uploadBase64ToSupabase, uploadBufferToSupabase } from '@/lib/supabaseStorage';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request) {
   try {
-    if (!(await verifyAdminSession(request))) {
-      return NextResponse.json({ error: 'Akses ditolak. Memerlukan hak akses administrator.' }, { status: 403 });
-    }
 
     const contentType = request.headers.get('content-type') || '';
 

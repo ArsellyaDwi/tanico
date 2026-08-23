@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { verifyAdminSession } from '@/utils/session';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/utils/logger';
 
@@ -7,9 +6,6 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
   try {
-    if (!(await verifyAdminSession(request))) {
-      return NextResponse.json({ error: 'Akses ditolak. Memerlukan hak akses administrator.' }, { status: 403 });
-    }
     if (!prisma) return NextResponse.json({ error: 'Database tidak tersedia' }, { status: 500 });
     const history = await prisma.stockHistory.findMany({
       orderBy: { timestamp: 'desc' },
@@ -25,9 +21,6 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    if (!(await verifyAdminSession(request))) {
-      return NextResponse.json({ error: 'Akses ditolak. Memerlukan hak akses administrator.' }, { status: 403 });
-    }
     if (!prisma) return NextResponse.json({ error: 'Database tidak tersedia' }, { status: 500 });
     const body = await request.json();
     const { productId, productName, type, quantity, notes } = body;

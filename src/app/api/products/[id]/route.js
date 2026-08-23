@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyAdminSession } from '@/utils/session';
 import { logger } from '@/utils/logger';
 import { clearHomeCache, getCacheItem, setCacheItem } from '@/lib/cache';
 
@@ -83,9 +82,6 @@ export async function GET(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
-    if (!(await verifyAdminSession(request))) {
-      return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 });
-    }
     const resolvedParams = await params;
     const { id } = resolvedParams;
     const body = await request.json();
@@ -105,9 +101,6 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    if (!(await verifyAdminSession(request))) {
-      return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 });
-    }
     const resolvedParams = await params;
     const { id } = resolvedParams;
 

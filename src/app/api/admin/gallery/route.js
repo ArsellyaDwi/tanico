@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { verifyAdminSession } from '@/utils/session';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/utils/logger';
 import { 
@@ -14,9 +13,6 @@ export const dynamic = 'force-dynamic';
 // GET - ambil semua galeri
 export async function GET(request) {
   try {
-    if (!(await verifyAdminSession(request))) {
-      return NextResponse.json({ error: 'Akses ditolak. Memerlukan hak akses administrator.' }, { status: 403 });
-    }
     if (!prisma) return NextResponse.json({ error: 'Database tidak tersedia' }, { status: 500 });
     const gallery = await prisma.gallery.findMany({
       orderBy: { sortOrder: 'asc' }
@@ -31,9 +27,6 @@ export async function GET(request) {
 // POST - tambah galeri baru
 export async function POST(request) {
   try {
-    if (!(await verifyAdminSession(request))) {
-      return NextResponse.json({ error: 'Akses ditolak. Memerlukan hak akses administrator.' }, { status: 403 });
-    }
     if (!prisma) return NextResponse.json({ error: 'Database tidak tersedia' }, { status: 500 });
     const body = await request.json();
     const { title, image, span, active, sortOrder } = body;
@@ -65,9 +58,6 @@ export async function POST(request) {
 // PUT - update galeri
 export async function PUT(request) {
   try {
-    if (!(await verifyAdminSession(request))) {
-      return NextResponse.json({ error: 'Akses ditolak. Memerlukan hak akses administrator.' }, { status: 403 });
-    }
     if (!prisma) return NextResponse.json({ error: 'Database tidak tersedia' }, { status: 500 });
     const body = await request.json();
     const { id, ...data } = body;
@@ -105,9 +95,6 @@ export async function PUT(request) {
 // DELETE - hapus galeri
 export async function DELETE(request) {
   try {
-    if (!(await verifyAdminSession(request))) {
-      return NextResponse.json({ error: 'Akses ditolak. Memerlukan hak akses administrator.' }, { status: 403 });
-    }
     if (!prisma) return NextResponse.json({ error: 'Database tidak tersedia' }, { status: 500 });
 
     // Ambil id dari query parameter

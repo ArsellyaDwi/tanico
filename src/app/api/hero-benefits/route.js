@@ -7,7 +7,6 @@ import {
   cleanupOldImageIfReplaced, 
   cleanupDeletedEntityImages 
 } from '@/lib/supabaseStorage';
-import { verifyAdminSession } from '@/utils/session';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -73,10 +72,6 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const admin = await verifyAdminSession(request);
-    if (!admin) {
-      return NextResponse.json({ error: 'Akses ditolak. Memerlukan hak akses administrator.' }, { status: 403, headers: NO_CACHE_HEADERS });
-    }
 
     if (!prisma) {
       return NextResponse.json({ error: 'Database tidak tersedia' }, { status: 500, headers: NO_CACHE_HEADERS });
@@ -211,10 +206,6 @@ export async function POST(request) {
 
 export async function PUT(request) {
   try {
-    const admin = await verifyAdminSession(request);
-    if (!admin) {
-      return NextResponse.json({ error: 'Akses ditolak. Memerlukan hak akses administrator.' }, { status: 403, headers: NO_CACHE_HEADERS });
-    }
 
     if (!prisma) {
       return NextResponse.json({ error: 'Database tidak tersedia' }, { status: 500, headers: NO_CACHE_HEADERS });
@@ -283,10 +274,6 @@ export async function PUT(request) {
 
 export async function DELETE(request) {
   try {
-    const admin = await verifyAdminSession(request);
-    if (!admin) {
-      return NextResponse.json({ error: 'Akses ditolak. Memerlukan hak akses administrator.' }, { status: 403, headers: NO_CACHE_HEADERS });
-    }
 
     if (!prisma) {
       return NextResponse.json({ error: 'Database tidak tersedia' }, { status: 500, headers: NO_CACHE_HEADERS });

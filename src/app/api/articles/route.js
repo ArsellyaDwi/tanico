@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyAdminSession } from '@/utils/session';
 import { logger } from '@/utils/logger';
 import { clearHomeCache, getCacheItem, setCacheItem } from '@/lib/cache';
 import { 
@@ -90,9 +89,6 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    if (!(await verifyAdminSession(request))) {
-      return NextResponse.json({ error: 'Akses ditolak: Memerlukan hak akses Admin yang sah.' }, { status: 403 });
-    }
     const body = await request.json();
     const {
       title,
@@ -144,9 +140,6 @@ export async function POST(request) {
 
 export async function PUT(request) {
   try {
-    if (!(await verifyAdminSession(request))) {
-      return NextResponse.json({ error: 'Akses ditolak: Memerlukan hak akses Admin yang sah.' }, { status: 403 });
-    }
     const { searchParams } = new URL(request.url);
     let id = searchParams.get('id');
     const body = await request.json();
@@ -215,9 +208,6 @@ export async function PUT(request) {
 
 export async function DELETE(request) {
   try {
-    if (!(await verifyAdminSession(request))) {
-      return NextResponse.json({ error: 'Akses ditolak: Memerlukan hak akses Admin yang sah.' }, { status: 403 });
-    }
     const { searchParams } = new URL(request.url);
     let id = searchParams.get('id');
     if (!id) {

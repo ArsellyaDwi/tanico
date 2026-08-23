@@ -1,22 +1,15 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/utils/logger';
-import { verifyAdminSession } from '@/utils/session';
 
 export const dynamic = 'force-dynamic';
 
-// In-memory cache for ultra-fast response
 let cachedDashboardData = null;
 let cacheTimestamp = 0;
-const CACHE_TTL_MS = 10000; // 10 seconds
+const CACHE_TTL_MS = 10000;
 
 export async function GET(request) {
   try {
-    const adminSession = await verifyAdminSession(request);
-    if (!adminSession) {
-      return NextResponse.json({ error: 'Akses ditolak. Memerlukan hak akses administrator.' }, { status: 403 });
-    }
-
     if (!prisma) {
       return NextResponse.json({
         totalRevenue: 0,
@@ -47,7 +40,6 @@ export async function GET(request) {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
-    // Parallel targeted queries
     const [
       totalProducts,
       totalCategories,
@@ -147,7 +139,6 @@ export async function GET(request) {
     const totalProductsSold = orderItemAgg?._sum?.quantity || 0;
     const averageOrderValue = totalOrdersCount > 0 ? Math.round(totalRevenue / totalOrdersCount) : 0;
 
-    // Sales Trend (7 days)
     const dayMap = {};
     for (let i = 0; i < 7; i++) {
       const d = new Date(sevenDaysAgo);
@@ -169,7 +160,6 @@ export async function GET(request) {
       Pendapatan: dayMap[label]
     }));
 
-    // Category Chart Data
     const categoryChartData = [
       { name: 'Sayuran Daun', value: Math.round(totalRevenue * 0.45) },
       { name: 'Sayuran Buah', value: Math.round(totalRevenue * 0.30) },
@@ -177,7 +167,6 @@ export async function GET(request) {
       { name: 'Jamur & Rempah', value: Math.round(totalRevenue * 0.10) }
     ];
 
-    // Order Status Data
     const statusCounts = { 'Menunggu': 0, 'Diproses': 0, 'Dikirim': 0, 'Selesai': 0, 'Dibatalkan': 0 };
     orderStatusGroup.forEach(grp => {
       if (grp.status && statusCounts[grp.status] !== undefined) {
@@ -190,7 +179,6 @@ export async function GET(request) {
       Jumlah: statusCounts[s]
     }));
 
-    // Best Sellers
     const bestSellers = topProductsRaw.map(p => ({
       p: {
         id: p.id,
@@ -202,7 +190,6 @@ export async function GET(request) {
       revenue: (p.soldCount || 1) * p.price
     }));
 
-    // Activity Logs
     const logs = [
       { id: '1', adminName: 'Administrator', action: 'Memverifikasi pesanan terbaru', timestamp: new Date().toISOString() },
       { id: '2', adminName: 'Administrator', action: 'Pembaruan stok produk otomatis', timestamp: new Date(Date.now() - 3600000).toISOString() }
@@ -239,4 +226,3 @@ export async function GET(request) {
     );
   }
 }
-
