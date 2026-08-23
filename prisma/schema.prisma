@@ -1,0 +1,447 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Role {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  users     User[]
+}
+
+model User {
+  id          String    @id @default(uuid())
+  email       String    @unique
+  username    String?   @unique
+  password    String?
+  name        String?
+  avatar      String?
+  provider    String    @default("Email")
+  phone       String?
+  address     String?
+  subdistrict String?
+  regency     String?
+  province    String?
+  postalCode  String?
+  status      String    @default("Aktif")
+  lastLogin   DateTime?
+  roleId      String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+  cart        Cart?
+  orders      Order[]
+  reviews     Review[]
+  role        Role?     @relation(fields: [roleId], references: [id])
+  wishlist    Wishlist?
+
+  @@index([email])
+  @@index([status])
+}
+
+model Category {
+  id             String    @id @default(uuid())
+  name           String    @unique
+  slug           String    @unique @default("")
+  image          String
+  description    String
+  itemCount      Int       @default(0)
+  status         String    @default("Aktif")
+  sortOrder      Int       @default(0)
+  badgeText      String?   @default("")
+  badgeColor     String?   @default("Green")
+  ctaLink        String?   @default("")
+  ctaText        String?   @default("")
+  showOnHomepage Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now()) @updatedAt
+  banner         String?   @default("")
+  cropPosition   String?   @default("center center")
+  cropZoom       String?   @default("100")
+  heroImage      String?   @default("")
+  ogImage        String?   @default("")
+  products       Product[]
+
+  @@index([status])
+  @@index([slug])
+  @@index([sortOrder])
+}
+
+model Product {
+  id                String           @id @default(uuid())
+  name              String
+  categoryId        String?
+  categoryName      String?
+  price             Float
+  discountPrice     Float?
+  unit              String
+  image             String
+  stock             Int              @default(0)
+  rating            Float            @default(5.0)
+  description       String
+  origin            String?
+  certification     String?
+  weight            Int              @default(0)
+  benefits          String?
+  isFeatured        Boolean          @default(false)
+  isNew             Boolean          @default(false)
+  isPopular         Boolean          @default(false)
+  status            String           @default("Aktif")
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @default(now()) @updatedAt
+  farmerLocationId  String?
+  soldCount         Int              @default(0)
+  cartItems         CartItem[]
+  orderItems        OrderItem[]
+  category          Category?        @relation(fields: [categoryId], references: [id])
+  farmerLocation    FarmerLocation?  @relation(fields: [farmerLocationId], references: [id])
+  images            ProductImage[]
+  reviews           Review[]
+  stockHistory      StockHistory[]
+  wishlistItems     WishlistItem[]
+  labels            Label[]          @relation("LabelToProduct")
+
+  @@index([categoryId])
+  @@index([status])
+  @@index([isFeatured])
+  @@index([isPopular])
+  @@index([isNew])
+  @@index([status, categoryId])
+  @@index([price])
+  @@index([createdAt])
+  @@index([name])
+}
+
+model ProductImage {
+  id        String   @id @default(uuid())
+  productId String
+  url       String
+  createdAt DateTime @default(now())
+  sortOrder Int      @default(0)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model Wishlist {
+  id        String         @id @default(uuid())
+  userId    String?        @unique
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @default(now()) @updatedAt
+  user      User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     WishlistItem[]
+}
+
+model WishlistItem {
+  id         String   @id @default(uuid())
+  wishlistId String
+  productId  String
+  createdAt  DateTime @default(now())
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  wishlist   Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+
+  @@unique([wishlistId, productId])
+  @@index([wishlistId])
+  @@index([productId])
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String?    @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @default(now()) @updatedAt
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  cartId    String
+  productId String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, productId])
+  @@index([cartId])
+  @@index([productId])
+}
+
+model Order {
+  id            String      @id
+  customerName  String
+  phone         String
+  address       String
+  subdistrict   String?
+  notes         String?
+  totalAmount   Float
+  status        String      @default("Menunggu")
+  paymentMethod String      @default("wa")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @default(now()) @updatedAt
+  customerEmail String?
+  userId        String?
+  voucherCode   String?
+  user          User?       @relation(fields: [userId], references: [id])
+  items         OrderItem[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  productId String?
+  name      String
+  price     Float
+  quantity  Int
+  unit      String
+  image     String?
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Review {
+  id           String    @id @default(uuid())
+  productId    String?
+  productName  String
+  customerName String
+  userId       String?
+  userAvatar   String?
+  rating       Int       @default(5)
+  comment      String
+  status       String    @default("Pending")
+  reply        String?
+  adminReply   String?
+  adminReplyAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @default(now()) @updatedAt
+  product      Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user         User?     @relation(fields: [userId], references: [id])
+
+  @@index([productId])
+  @@index([userId])
+  @@index([status])
+}
+
+model HeroBanner {
+  id           String   @id @default(uuid())
+  image        String?  @default("")
+  title        String
+  subtitle     String   @default("")
+  createdAt    DateTime @default(now())
+  active       Boolean  @default(true)
+  background   String?  @default("")
+  badge        String?  @default("")
+  buttonLink   String?  @default("")
+  buttonText   String?  @default("")
+  cropPosition String?  @default("center center")
+  cropZoom     String?  @default("100")
+  description  String?  @default("")
+  desktopCrop  String?  @default("center center")
+  desktopImage String?  @default("")
+  desktopZoom  String?  @default("100")
+  mobileCrop   String?  @default("center center")
+  mobileImage  String?  @default("")
+  mobileZoom   String?  @default("100")
+  overlay      Float?   @default(0)
+  sortOrder    Int      @default(0)
+  updatedAt    DateTime @default(now()) @updatedAt
+
+  @@index([active])
+  @@index([sortOrder])
+}
+
+model HeroBenefit {
+  id          String   @id @default(cuid())
+  title       String   @default("")
+  description String   @default("")
+  value       String?  @default("")
+  label       String?  @default("")
+  image       String   @default("")
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([active])
+  @@index([sortOrder])
+}
+
+model Gallery {
+  id        String   @id @default(uuid())
+  image     String
+  title     String
+  span      String?  @default("col-span-1")
+  createdAt DateTime @default(now())
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([active])
+  @@index([sortOrder])
+}
+
+model Testimonial {
+  id        String   @id @default(uuid())
+  name      String
+  role      String
+  comment   String
+  rating    Int      @default(5)
+  avatar    String
+  createdAt DateTime @default(now())
+  active    Boolean  @default(true)
+  location  String?
+  sortOrder Int      @default(0)
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([active])
+  @@index([sortOrder])
+}
+
+model Partner {
+  id          String   @id @default(uuid())
+  name        String
+  logo        String
+  location    String?
+  description String?
+  website     String?
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  @@index([active])
+  @@index([sortOrder])
+}
+
+model ContactMessage {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  phone     String
+  subject   String?
+  message   String
+  isRead    Boolean  @default(false)
+  reply     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+model WebsiteSetting {
+  id               String   @id @default("default")
+  logoText         String   @default("TaniCo")
+  tagline          String   @default("Murni Organik")
+  websiteName      String   @default("TaniCo — Sayur Segar Organik")
+  address          String   @default("Jl. Raya Pemali No. 45, Kecamatan Pemali, Kabupaten Bangka, Provinsi Kepulauan Bangka Belitung 33251")
+  googleMapsUrl    String   @default("")
+  whatsappNumber   String   @default("+628127300400")
+  instagramUrl     String   @default("https://instagram.com/tanico.bangka")
+  facebookUrl      String   @default("https://facebook.com/TaniCoBangka")
+  emailAddress     String   @default("halo@tanico.id")
+  operationalHours String   @default("Setiap Hari: 07.00 - 17.00 WIB")
+  footerText       String   @default("© 2026 TaniCo. Hak Cipta Dilindungi.")
+  seoKeywords      String   @default("sayur organik, sayur segar bangka, tanico, sayur sehat")
+  homepageCMS      String   @default("")
+  updatedAt        DateTime @default(now()) @updatedAt
+  contactsCMS      String?  @default("")
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  adminName String   @default("Admin TaniCo")
+  action    String
+  timestamp DateTime @default(now())
+
+  @@index([timestamp])
+}
+
+model StockHistory {
+  id          String   @id @default(uuid())
+  productId   String
+  productName String
+  type        String
+  quantity    Int
+  notes       String
+  timestamp   DateTime @default(now())
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([timestamp])
+}
+
+model AdminProfile {
+  id        String   @id @default("default")
+  name      String   @default("Admin TaniCo")
+  email     String   @default("admin@tanico.id")
+  role      String   @default("Super Admin")
+  avatar    String   @default("")
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model Label {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  color     String    @default("Green")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  products  Product[] @relation("LabelToProduct")
+}
+
+model FarmerLocation {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  products  Product[]
+}
+
+model Article {
+  id               String   @id @default(uuid())
+  title            String
+  slug             String   @unique
+  category         String   @default("umum")
+  author           String?
+  image            String?
+  excerpt          String?
+  content          String
+  readTime         String?
+  date             String?
+  status           String   @default("published")
+  showOnHomepage   Boolean  @default(true)
+  showOnKisahMitra Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @default(now()) @updatedAt
+  subtitle         String?
+
+  @@index([slug])
+  @@index([category])
+  @@index([status])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
+}

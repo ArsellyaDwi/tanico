@@ -1,0 +1,6 @@
+{
+  "name": "TaniCo",
+  "description": "A high-fidelity, premium, and beautifully minimalist e-commerce platform for curated fresh organic and hydroponic vegetables, featuring sustainable farm stories and editorial layouts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
