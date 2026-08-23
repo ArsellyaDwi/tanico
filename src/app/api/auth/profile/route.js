@@ -1,19 +1,32 @@
 import { NextResponse } from 'next/server';
+import { jwtVerify } from 'jose';
 import { prisma } from '@/lib/prisma';
 import { updateUserProfile } from '@/lib/dbActions';
-import { getAuthenticatedUser } from '@/utils/session';
 import { isRateLimited, getClientIp } from '@/utils/rateLimit';
 import { logger } from '@/utils/logger';
-import { 
-  ensureSupabaseImageUrl, 
-  cleanupOldImageIfReplaced 
+import {
+  ensureSupabaseImageUrl,
+  cleanupOldImageIfReplaced
 } from '@/lib/supabaseStorage';
 
 export const dynamic = 'force-dynamic';
 
+async function getUserFromRequest(request) {
+  try {
+    const token = request.cookies.get('tanico_session')?.value;
+    if (!token) return null;
+
+    const secret = new TextEncoder().encode(process.env.SESSION_SECRET || process.env.SUPABASE_JWT_SECRET);
+    const { payload } = await jwtVerify(token, secret);
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(request) {
   try {
-    const session = await getAuthenticatedUser(request);
+    const session = await getUserFromRequest(request);
     if (!session) {
       return NextResponse.json({ error: 'Sesi tidak valid atau telah berakhir.' }, { status: 401 });
     }
@@ -51,7 +64,7 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'Terlalu banyak permintaan. Silakan tunggu sebentar.' }, { status: 429 });
     }
 
-    const session = await getAuthenticatedUser(request);
+    const session = await getUserFromRequest(request);
     if (!session) {
       return NextResponse.json({ error: 'Sesi tidak valid atau telah berakhir.' }, { status: 401 });
     }
@@ -76,7 +89,6 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'Pengguna tidak ditemukan' }, { status: 404 });
     }
 
-    // Filter out undefined and null values
     const cleanData = {};
     Object.keys(profileData).forEach(key => {
       if (profileData[key] !== undefined && profileData[key] !== null) {
@@ -114,4 +126,3 @@ export async function PUT(request) {
     return NextResponse.json({ error: 'Terjadi kesalahan pada server.' }, { status: 500 });
   }
 }
-

@@ -1,10 +1,28 @@
 import { NextResponse } from 'next/server';
+import { jwtVerify } from 'jose';
 import { deleteUserWishlistItem } from '@/lib/dbActions';
-import { getAuthenticatedUser } from '@/utils/session';
 import { isRateLimited, getClientIp } from '@/utils/rateLimit';
 import { logger } from '@/utils/logger';
 
 export const dynamic = 'force-dynamic';
+
+async function getUserFromRequest(request) {
+  try {
+    const token = request.cookies.get('tanico_session')?.value;
+    if (token) {
+      const secret = new TextEncoder().encode(process.env.SESSION_SECRET || process.env.SUPABASE_JWT_SECRET);
+      const { payload } = await jwtVerify(token, secret);
+      return payload;
+    }
+    const userId = request.headers.get('x-user-id');
+    if (userId) {
+      return { id: userId };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 export async function DELETE(request, { params }) {
   try {
@@ -15,7 +33,7 @@ export async function DELETE(request, { params }) {
 
     const resolvedParams = await params;
     const { productId } = resolvedParams;
-    const session = await getAuthenticatedUser(request);
+    const session = await getUserFromRequest(request);
     const userId = session?.id || request.headers.get('x-user-id');
     if (!userId) {
       return NextResponse.json({ error: 'Akses tidak diizinkan.' }, { status: 401 });
@@ -30,4 +48,3 @@ export async function DELETE(request, { params }) {
     return NextResponse.json({ error: 'Terjadi kesalahan pada server.' }, { status: 500 });
   }
 }
-

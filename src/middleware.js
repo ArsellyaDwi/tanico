@@ -14,29 +14,20 @@ async function verifySessionToken(token) {
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
-  
-  // LOG 1: Pastikan middleware berjalan
-  console.log('🔹 MIDDLEWARE RUNNING:', pathname);
 
   const isAdminPage = pathname.startsWith('/admin') && !pathname.startsWith('/api/admin');
   const isAdminApi = pathname.startsWith('/api/admin');
 
   if (isAdminPage || isAdminApi) {
-    console.log('🔸 Admin path detected:', pathname);
-
     if (pathname === '/api/admin/auth/login') {
-      console.log('✅ Login API - allow');
       return NextResponse.next();
     }
 
     const sessionToken = request.cookies.get('tanico_session')?.value;
-    console.log('🔸 Cookie tanico_session:', sessionToken ? 'ADA' : 'TIDAK ADA');
-
     let isValidAdmin = false;
 
     if (sessionToken) {
       const payload = await verifySessionToken(sessionToken);
-      console.log('🔸 Payload after verify:', payload);
       if (payload) {
         const role = payload.role || '';
         const roleUpper = role.toUpperCase();
@@ -45,17 +36,14 @@ export async function middleware(request) {
         }
       }
     }
-    console.log('🔸 isValidAdmin:', isValidAdmin);
 
     if (isAdminApi) {
       if (!isValidAdmin) {
-        console.log('❌ API blocked - invalid admin');
         return NextResponse.json(
           { error: 'Unauthorized - Admin access required' },
           { status: 403 }
         );
       }
-      console.log('✅ API allowed');
       return NextResponse.next();
     }
 
